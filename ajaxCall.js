@@ -8,5 +8,4 @@ function ajaxCall(method, api, data, successCB, errorCB) {
     error: errorCB,
   });
 }
-const server = `https://194.90.158.74/igroup6/test2/tar1/`;
-const api = server + "api/Game";
+let api = "https://194.90.158.74/igroup6/test2/tar1/api/Game";

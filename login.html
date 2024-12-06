@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./ajaxCall.js" defer></script>
+    <title>Steam Registration</title>
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to Steam</h1>
+    </header>
+
+    <main>
+      <h2 style="margin-bottom: 2rem; color: #66c0f4">login to Your Account</h2>
+
+      <form class="registration-form" id="formR">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter Your email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter Your Password"
+            required
+          />
+        </div>
+
+        <button type="submit">Create Account</button>
+        <p>don have Account? <a href="./login.html"> login</a></p>
+      </form>
+    </main>
+  </body>
+  <script>
+    $(document).ready(function () {
+      $("#formR").submit(function (e) {
+        e.preventDefault();
+        addUser();
+      });
+    });
+
+    function addUser() {
+      const email = $("#email").val();
+      const password = $("#password").val();
+      const confirmPassword = $("#confirm-password").val();
+      const name = $("#name").val();
+
+      if (password !== confirmPassword) {
+        Swal.fire("Error", "Passwords do not match!", "error");
+
+        return;
+      }
+
+      const user = {
+        email1: email,
+        password: password,
+      };
+      console.log("מה נשלח ", user); // נוסיף לוג לבדיקה
+
+      // קריאה לפונקציית AJAX
+      ajaxCall(
+        "POST",
+        "https://194.90.158.74/igroup6/test2/tar1/api/users/login", // ה-API שאליו נשלחת הבקשה
+        JSON.stringify(user),
+        onSuccess, // פונקציית הצלחה
+        onError // פונקציית שגיאה
+      );
+    }
+
+    function onSuccess() {
+      Swal.fire("Success", "Your account has been created!", "success").then(
+        () => {
+          $("#email").val("");
+          $("#password").val("");
+          $("#confirm-password").val("");
+          $("#name").val("");
+        }
+      );
+    }
+
+    function onError() {
+      Swal.fire(
+        "Error",
+        "User Already exsits. Please Change your email or try again Later.",
+        "error"
+      );
+    }
+  </script>
+</html>
