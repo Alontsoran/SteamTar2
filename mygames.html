@@ -12,12 +12,16 @@
   </head>
   <body>
     <header>
+      <button onclick="logout()">Logout</button>
+
       <div class="header-container">
         <div class="title-section">
           <h1>My wish List -Steam</h1>
         </div>
         <div>
-          <button onclick="window.location.href='./index.html'">Back</button>
+          <button onclick="window.location.href='./index.html'">
+            All Games
+          </button>
         </div>
         <div class="filters-section">
           <div class="filter-group">
@@ -158,6 +162,9 @@
         }
 
         ajaxCall("DELETE", `${api}/${appID}`, "", responsePost, errorPost);
+      });
+      $(document).ready(function () {
+        checkIfLoggedIn();
       });
     </script>
   </body>

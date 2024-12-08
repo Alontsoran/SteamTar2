@@ -6,18 +6,18 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="./style.css" />
-    <script src="./ajaxCall.js" defer></script>
-    <title>Steam Registration</title>
+    <script src="./ajaxCall.js"></script>
+    <title>Steam Login</title>
   </head>
   <body>
     <header>
-      <h1>Welcome to Steam</h1>
+      <h1>Welcome Back to Steam</h1>
     </header>
 
     <main>
-      <h2 style="margin-bottom: 2rem; color: #66c0f4">login to Your Account</h2>
+      <h2 style="margin-bottom: 2rem; color: #66c0f4">Login to Your Account</h2>
 
-      <form class="registration-form" id="formR">
+      <form class="registration-form" id="formLogin">
         <div class="form-group">
           <label for="email">Email Address</label>
           <input
@@ -37,42 +37,45 @@
             required
           />
         </div>
+        <button type="submit">Sign in</button>
 
-        <button type="submit">Create Account</button>
-        <p>don have Account? <a href="./login.html"> login</a></p>
+        <p>don't have Account? <a href="./register.html"> register</a></p>
+        <p>Gg</p>
+        <img
+          height="200px"
+          width="200px"
+          src="./Screenshot 2024-12-06 231332.png"
+          alt=""
+        />
       </form>
     </main>
   </body>
   <script>
     $(document).ready(function () {
-      $("#formR").submit(function (e) {
+      $("#formLogin").submit(function (e) {
         e.preventDefault();
-        addUser();
+        Login();
       });
     });
 
-    function addUser() {
+    function Login() {
       const email = $("#email").val();
       const password = $("#password").val();
-      const confirmPassword = $("#confirm-password").val();
-      const name = $("#name").val();
-
-      if (password !== confirmPassword) {
-        Swal.fire("Error", "Passwords do not match!", "error");
-
-        return;
-      }
-
+      id = 1;
+      name = null;
       const user = {
-        email1: email,
-        password: password,
+        id,
+        name,
+        email,
+        password,
       };
-      console.log("מה נשלח ", user); // נוסיף לוג לבדיקה
+
+      console.log("מה נשלח ", user);
 
       // קריאה לפונקציית AJAX
       ajaxCall(
         "POST",
-        "https://194.90.158.74/igroup6/test2/tar1/api/users/login", // ה-API שאליו נשלחת הבקשה
+        "https://194.90.158.74/igroup6/test2/tar1/api/users/login",
         JSON.stringify(user),
         onSuccess, // פונקציית הצלחה
         onError // פונקציית שגיאה
@@ -80,20 +83,23 @@
     }
 
     function onSuccess() {
-      Swal.fire("Success", "Your account has been created!", "success").then(
-        () => {
-          $("#email").val("");
-          $("#password").val("");
-          $("#confirm-password").val("");
-          $("#name").val("");
-        }
-      );
+      localStorage.setItem("userEmail", $("#email").val());
+
+      Swal.fire(
+        "Success",
+        "Login Approved your are Passing to Website",
+        "success"
+      ).then(() => {
+        $("#email").val("");
+        $("#password").val("");
+        window.location.href = "./mygames.html";
+      });
     }
 
     function onError() {
       Swal.fire(
         "Error",
-        "User Already exsits. Please Change your email or try again Later.",
+        "Paswword or Email is incorrect , Please Try again",
         "error"
       );
     }

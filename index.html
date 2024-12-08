@@ -25,6 +25,9 @@
 
   <script>
     $(document).ready(function () {
+      checkIfLoggedIn();
+    });
+    $(document).ready(function () {
       // Render game cards
       function renderGameCards(games) {
         const gameGrid = document.querySelector(".game-grid");
