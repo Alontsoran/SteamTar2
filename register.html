@@ -57,6 +57,7 @@
     </main>
   </body>
   <script>
+    // link=https://194.90.158.74/igroup6/test2/tar1
     $(document).ready(function () {
       $("#formR").submit(function (e) {
         e.preventDefault();
@@ -87,7 +88,7 @@
       // קריאה לפונקציית AJAX
       ajaxCall(
         "POST",
-        "https://194.90.158.74/igroup6/test2/tar1/api/users/register",
+        "https://localhost:7262/api/users/register",
         JSON.stringify(user),
         onSuccess, // פונקציית הצלחה
         onError // פונקציית שגיאה
