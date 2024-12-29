@@ -61,7 +61,7 @@
     function Login() {
       const email = $("#email").val();
       const password = $("#password").val();
-      id = 1;
+      id = "";
       name = null;
       const user = {
         id,
@@ -71,11 +71,12 @@
       };
 
       console.log("מה נשלח ", user);
+      var api_base = "https://localhost:7262/api/";
 
       // קריאה לפונקציית AJAX
       ajaxCall(
         "POST",
-        "https://localhost:7262/api/users/login",
+        `${api_base}users/login`,
         JSON.stringify(user),
         onSuccess, // פונקציית הצלחה
         onError // פונקציית שגיאה

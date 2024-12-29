@@ -70,7 +70,7 @@
       const password = $("#password").val();
       const confirmPassword = $("#confirm-password").val();
       const name = $("#name").val();
-      const id = 1;
+      const id = "";
       if (password !== confirmPassword) {
         Swal.fire("Error", "Passwords do not match!", "error");
 
@@ -88,7 +88,7 @@
       // קריאה לפונקציית AJAX
       ajaxCall(
         "POST",
-        "https://localhost:7262/api/users/register",
+        "https://localhost:7262/api/Users/register",
         JSON.stringify(user),
         onSuccess, // פונקציית הצלחה
         onError // פונקציית שגיאה

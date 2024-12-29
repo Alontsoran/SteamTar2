@@ -8,7 +8,6 @@ function ajaxCall(method, api, data, successCB, errorCB) {
     error: errorCB,
   });
 }
-let api = "https://194.90.158.74/igroup6/test2/tar1/api/Game";
 
 function logout() {
   localStorage.removeItem("userEmail");

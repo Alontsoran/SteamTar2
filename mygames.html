@@ -13,7 +13,15 @@
   <body>
     <header>
       <button onclick="logout()">Logout</button>
-
+      <div>
+        <h2 id="userGreeting"></h2>
+      </div>
+      <script>
+        const loggedInUser = localStorage.getItem("userEmail");
+        const name = localStorage.getItem("userName");
+        document.getElementById("userGreeting").textContent = `Hello ${name} 
+         email  : ${loggedInUser}  `;
+      </script>
       <div class="header-container">
         <div class="title-section">
           <h1>My wish List -Steam</h1>
@@ -58,114 +66,138 @@
     </main>
 
     <script>
-      let gamelist;
-
-      function FailsFromserver(err) {
-        console.error("Failed to load games:", err);
-      }
-
-      function getFromServer(gameList) {
-        gamelist = gameList;
-        render();
-      }
-
-      function render() {
-        const gameGrid = document.querySelector(".game-grid");
-        gameGrid.innerHTML = "";
-
-        if (!gamelist || gamelist.length === 0) {
-          gameGrid.innerHTML = "<p>No games in your list</p>";
+      $(document).ready(function () {
+        // בדיקת התחברות
+        const loggedInUser = localStorage.getItem("userEmail");
+        if (!loggedInUser) {
+          window.location.href = "login.html";
           return;
         }
+        var api_base = "https://localhost:7262/api/";
 
-        gamelist.forEach((game) => {
-          const tags = game.Tags ? game.Tags.split(",") : [];
-          const cardHTML = `
-                  <article class="game-card">
-                      <img src="${game.headerImage1}" alt="${
-            game.name1
-          }" class="game-image">
-                      <div class="game-info">
-                          <h2 class="game-title">${game.name1}</h2>
-                          <button class="RemoveGame" data-appid="${
-                            game.appId1
-                          }">Remove from List</button>
-                          <div class="tags">
-                              ${tags
-                                .map(
-                                  (tag) =>
-                                    `<span class="tag">${tag.trim()}</span>`
-                                )
-                                .join("")}
-                          </div>
-                          <div class="price-section">
-                              <div class="price">${
-                                game.price1 > 0 ? "$" + game.price1 : "Free"
-                              }</div>
-                          </div>
-                          <div>Rank : ${game.scoreRank1}</div>
-                      </div>
-                  </article>
-                `;
-          gameGrid.innerHTML += cardHTML;
+        const api = `${api_base}game/user/${loggedInUser}/games`;
+
+        loadGames(api);
+
+        // פונקציה לרינדור המשחקים
+        function renderGames(gameList) {
+          const $gameGrid = $(".game-grid");
+          $gameGrid.empty();
+
+          if (!gameList || gameList.length === 0) {
+            $gameGrid.html("<p>No games in your list</p>");
+            return;
+          }
+
+          gameList.forEach((game) => {
+            const tags = game.tags ? game.tags.split(",") : [];
+            const $card = $(`
+                <article class="game-card">
+                    <img src="${game.headerImage1}" alt="${
+              game.name1
+            }" class="game-image">
+                    <div class="game-info">
+                        <h2 class="game-title">${game.name1}</h2>
+                        <button class="RemoveGame" data-appid="${
+                          game.appId1
+                        }">Remove from List</button>
+                        <div class="tags">
+                            ${tags
+                              .map(
+                                (tag) =>
+                                  `<span class="tag">${tag.trim()}</span>`
+                              )
+                              .join("")}
+                        </div>
+                        <div class="price-section">
+                            <div class="price">${
+                              game.price1 > 0 ? "$" + game.price1 : "Free"
+                            }</div>
+                        </div>
+                        <div>Rank : ${game.scoreRank1}</div>
+                    </div>
+                </article>
+            `);
+            $gameGrid.append($card);
+          });
+        }
+
+        // הסרת משחק
+        $(document).on("click", ".RemoveGame", function () {
+          const appID = $(this).data("appid");
+          ajaxCall(
+            "DELETE",
+            `${api_base}game/user/${loggedInUser}/game/${appID}`,
+            "",
+            function () {
+              loadGames(); // טעינה מחדש של הרשימה
+              const api = `${api_base}game/user/${loggedInUser}/games`;
+
+              loadGames(api);
+            },
+            function () {
+              alert("Failed to remove game");
+            }
+          );
         });
+
+        // הוספת משחק
+        $(document).on("click", ".AddGame", function () {
+          const appID = $(this).data("appid");
+          ajaxCall(
+            "POST",
+            `${api_base}Game/user/${loggedInUser}/game/${appID}`,
+            "",
+            function (result) {
+              if (result === 1) {
+                alert("Game added successfully!");
+                loadGames(); // טעינה מחדש של הרשימה
+              } else if (result === 0) {
+                alert("Game already in your list!");
+              }
+            },
+            function () {
+              alert("Failed to add game");
+            }
+          );
+        });
+
+        // פילטור לפי מחיר
+        $("#price-filter").on("input", function () {
+          const maxPrice = $(this).val();
+          const api = `${api_base}game/user/${loggedInUser}/games/${maxPrice}`;
+          loadGames(api);
+          // פונקציה לטעינת המשחקים
+        });
+        function loadGames(api) {
+          ajaxCall(
+            "GET",
+            api,
+            "",
+            function (gameList) {
+              renderGames(gameList);
+            },
+            function () {
+              alert("Failed to load games");
+            }
+          );
+        }
+        // פילטור לפי דירוג
+        $("#rank-filter").on("input", function () {
+          const maxRank = $(this).val();
+          const api = `${api_base}game/user/${loggedInUser}/games/Rank/${maxRank}`;
+          loadGames(api);
+        });
+
+        // טעינה ראשונית של המשחקים
+        loadGames();
+      });
+
+      // פונקציית התנתקות
+      function logout() {
+        localStorage.clear();
+        window.location.href = "login.html";
       }
-
-      $(document).ready(function () {
-        ajaxCall("GET", api, "", getFromServer, FailsFromserver);
-      });
-      $(document).on("input", "#rank-filter", function () {
-        const rank = parseFloat($(this).val());
-        if (isNaN(rank)) {
-          ajaxCall("GET", api, "", getFromServer, FailsFromserver);
-          return;
-        } else {
-          ajaxCall(
-            "GET",
-            `${api}/rank/${rank}`,
-            "",
-            getFromServer,
-            FailsFromserver
-          );
-        }
-      });
-      $(document).on("input", "#price-filter", function () {
-        const maxPrice = parseFloat($(this).val());
-        if (isNaN(maxPrice)) {
-          ajaxCall("GET", api, "", getFromServer, FailsFromserver);
-          return;
-        } else {
-          ajaxCall(
-            "GET",
-            `${api}/price/${maxPrice}`,
-            "",
-            getFromServer,
-            FailsFromserver
-          );
-        }
-      });
-      $(document).on("click", ".RemoveGame", function () {
-        const appID = $(this).data("appid");
-        const game = gamelist.find((g) => g.appId1 === appID);
-
-        if (!game) {
-          console.error("Game not found in list");
-          return;
-        }
-
-        function responsePost() {
-          ajaxCall("GET", api, "", getFromServer, FailsFromserver);
-        }
-
-        function errorPost() {
-          console.error("Failed to remove game:", game.name1);
-        }
-
-        ajaxCall("DELETE", `${api}/${appID}`, "", responsePost, errorPost);
-      });
-      $(document).ready(function () {
-        checkIfLoggedIn();
-      });
     </script>
   </body>
 </html>
