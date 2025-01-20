@@ -61,8 +61,8 @@
     function Login() {
       const email = $("#email").val();
       const password = $("#password").val();
-      id = "";
-      name = null;
+      const id = "string";
+      const name = "string";
       const user = {
         id,
         name,
@@ -71,36 +71,61 @@
       };
 
       console.log("מה נשלח ", user);
-      var api_base = "https://localhost:7262/api/";
+      var api_base = "https://194.90.158.74/igroup6/test2/tar1/api/";
 
-      // קריאה לפונקציית AJAX
       ajaxCall(
         "POST",
         `${api_base}users/login`,
         JSON.stringify(user),
-        onSuccess, // פונקציית הצלחה
-        onError // פונקציית שגיאה
+        onSuccess,
+        onError
       );
     }
 
     function onSuccess() {
-      localStorage.setItem("userEmail", $("#email").val());
-
-      Swal.fire(
-        "Success",
-        "Login Approved your are Passing to Website",
-        "success"
-      ).then(() => {
-        $("#email").val("");
-        $("#password").val("");
-        window.location.href = "./mygames.html";
-      });
+    const emailInput = $("#email").val();
+    const passwordInput = $("#password").val();
+    
+    if (emailInput === "admin@admin.com" && passwordInput === "Admin1234") {
+        Swal.fire(
+            "Success",
+            "Login Approved - Redirecting to Admin Panel",
+            "success"
+        ).then(() => {
+            $("#email").val("");
+            $("#password").val("");
+            window.location.href = "./adminPage.html";
+        });
+        return;
     }
+    
+    localStorage.setItem("userEmail", emailInput);
+    const email1 = localStorage.getItem("userEmail");
+    
+    ajaxCall(
+        "GET",
+        `https://194.90.158.74/igroup6/test2/tar1/api/Users/id?email=${email1}`,
+        "",
+        function (userId) {
+            localStorage.setItem("userId", userId);
+            Swal.fire(
+                "Success",
+                "Login Approved your are Passing to Website",
+                "success"
+            ).then(() => {
+                $("#email").val("");
+                $("#password").val("");
+                window.location.href = "./mygames.html";
+            });
+        },
+        onError
+    );
+}
 
     function onError() {
       Swal.fire(
         "Error",
-        "Paswword or Email is incorrect , Please Try again",
+        "Password or Email is incorrect, Please Try again/Your Are not Actived",
         "error"
       );
     }

@@ -1,30 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="./game.js"></script>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="./style.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="./ajaxCall.js"></script>
-
     <title>Steam Game List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- jQuery חובה לטעון לפני הסקריפטים המשתמשים בו -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- סגנונות -->
+    <link rel="stylesheet" href="./style.css" />
+
+    <!-- סקריפט כללי (אם הוא משתמש ב-ajaxCall / game.js, אפשר להשאיר) -->
+    <script src="./game.js"></script>
+    <script src="./ajaxCall.js"></script>
   </head>
+
   <body>
     <header>
+      <button onclick="window.location.href='./profile.html'">
+        Edit Profile
+      </button>
       <button onclick="logout()">Logout</button>
       <div>
         <h2 id="userGreeting"></h2>
       </div>
       <script>
+        // ברגע הטעינה של ה-Header, מברכים את המשתמש
         const loggedInUser = localStorage.getItem("userEmail");
         const name = localStorage.getItem("userName");
-        document.getElementById("userGreeting").textContent = `Hello ${name} 
-         email  : ${loggedInUser}  `;
+        document.getElementById(
+          "userGreeting"
+        ).textContent = `Hello ${name} (email: ${loggedInUser})`;
       </script>
+
       <div class="header-container">
         <div class="title-section">
-          <h1>My wish List -Steam</h1>
+          <h1>My wish List - Steam</h1>
         </div>
         <div>
           <button onclick="window.location.href='./index.html'">
@@ -66,20 +78,43 @@
     </main>
 
     <script>
+      // כל הקוד מרוכז ב־document.ready כדי לוודא ש־DOM נטען לפני ביצוע
       $(document).ready(function () {
-        // בדיקת התחברות
+        // 1. בדיקת התחברות
         const loggedInUser = localStorage.getItem("userEmail");
         if (!loggedInUser) {
+          // אם אין משתמש, מועברים לעמוד login
           window.location.href = "login.html";
           return;
         }
-        var api_base = "https://localhost:7262/api/";
 
-        const api = `${api_base}game/user/${loggedInUser}/games`;
+        // 2. הגדרת פונקציית onError (או אפשר להסיר מהקריאה אם לא צריך)
+        function onError(err) {
+          console.error("An error occurred:", err);
+        }
 
-        loadGames(api);
+        // 3. הבאת userId (נניח שרוצים לשמור בזיכרון)
+        ajaxCall(
+          "GET",
+          `https://194.90.158.74/igroup6/test2/tar1/api/Users/id?email=${loggedInUser}`,
+          "",
+          function (userId) {
+            localStorage.setItem("userId", userId);
+            // אם אמורים לעבור לעמוד אחר, אפשר להשאיר את השורה הבאה
+            // אך שים לב שזה יעביר אותך ל־mygames.html מיד אחרי שליפת ה־userId
+            // window.location.href = "mygames.html";
+          },
+          onError
+        );
 
-        // פונקציה לרינדור המשחקים
+        // 4. הגדרת ה־API הבסיסי וקריאה ראשונית לטעינת רשימת משחקים
+        const api_base = "https://194.90.158.74/igroup6/test2/tar1/api/";
+        let currentApi = `${api_base}game/user/${loggedInUser}/games`;
+
+        // טעינה ראשונית של כל המשחקים
+        loadGames(currentApi);
+
+        // פונקציה שמציגה את המשחקים ב־DOM
         function renderGames(gameList) {
           const $gameGrid = $(".game-grid");
           $gameGrid.empty();
@@ -92,84 +127,38 @@
           gameList.forEach((game) => {
             const tags = game.tags ? game.tags.split(",") : [];
             const $card = $(`
-                <article class="game-card">
-                    <img src="${game.headerImage1}" alt="${
-              game.name1
-            }" class="game-image">
-                    <div class="game-info">
-                        <h2 class="game-title">${game.name1}</h2>
-                        <button class="RemoveGame" data-appid="${
-                          game.appId1
-                        }">Remove from List</button>
-                        <div class="tags">
-                            ${tags
-                              .map(
-                                (tag) =>
-                                  `<span class="tag">${tag.trim()}</span>`
-                              )
-                              .join("")}
-                        </div>
-                        <div class="price-section">
-                            <div class="price">${
-                              game.price1 > 0 ? "$" + game.price1 : "Free"
-                            }</div>
-                        </div>
-                        <div>Rank : ${game.scoreRank1}</div>
+              <article class="game-card">
+                <img
+                  src="${game.headerImage1}"
+                  alt="${game.name1}"
+                  class="game-image"
+                />
+                <div class="game-info">
+                  <h2 class="game-title">${game.name1}</h2>
+                  <button class="RemoveGame" data-appid="${game.appId1}">
+                    Remove from List
+                  </button>
+                  <div class="tags">
+                    ${tags
+                      .map((tag) => `<span class="tag">${tag.trim()}</span>`)
+                      .join("")}
+                  </div>
+                  <div class="price-section">
+                    <div class="price">
+                      ${game.price1 > 0 ? "$" + game.price1 : "Free"}
                     </div>
-                </article>
+                  </div>
+                  <div>Rank : ${game.scoreRank1}</div>
+                </div>
+              </article>
             `);
             $gameGrid.append($card);
           });
         }
 
-        // הסרת משחק
-        $(document).on("click", ".RemoveGame", function () {
-          const appID = $(this).data("appid");
-          ajaxCall(
-            "DELETE",
-            `${api_base}game/user/${loggedInUser}/game/${appID}`,
-            "",
-            function () {
-              loadGames(); // טעינה מחדש של הרשימה
-              const api = `${api_base}game/user/${loggedInUser}/games`;
-
-              loadGames(api);
-            },
-            function () {
-              alert("Failed to remove game");
-            }
-          );
-        });
-
-        // הוספת משחק
-        $(document).on("click", ".AddGame", function () {
-          const appID = $(this).data("appid");
-          ajaxCall(
-            "POST",
-            `${api_base}Game/user/${loggedInUser}/game/${appID}`,
-            "",
-            function (result) {
-              if (result === 1) {
-                alert("Game added successfully!");
-                loadGames(); // טעינה מחדש של הרשימה
-              } else if (result === 0) {
-                alert("Game already in your list!");
-              }
-            },
-            function () {
-              alert("Failed to add game");
-            }
-          );
-        });
-
-        // פילטור לפי מחיר
-        $("#price-filter").on("input", function () {
-          const maxPrice = $(this).val();
-          const api = `${api_base}game/user/${loggedInUser}/games/${maxPrice}`;
-          loadGames(api);
-          // פונקציה לטעינת המשחקים
-        });
+        // פונקציית עזר לטעינת המשחקים מה־API
         function loadGames(api) {
+          if (!api) return;
           ajaxCall(
             "GET",
             api,
@@ -182,15 +171,65 @@
             }
           );
         }
-        // פילטור לפי דירוג
-        $("#rank-filter").on("input", function () {
-          const maxRank = $(this).val();
-          const api = `${api_base}game/user/${loggedInUser}/games/Rank/${maxRank}`;
-          loadGames(api);
+
+        // מחיקת משחק מהרשימה
+        $(document).on("click", ".RemoveGame", function () {
+          const appID = $(this).data("appid");
+          ajaxCall(
+            "DELETE",
+            `${api_base}game/user/${loggedInUser}/game/${appID}`,
+            "",
+            function () {
+              loadGames(currentApi);
+            },
+            function () {
+              alert("Failed to remove game");
+            }
+          );
         });
 
-        // טעינה ראשונית של המשחקים
-        loadGames();
+        // הוספת משחק לרשימה
+        $(document).on("click", ".AddGame", function () {
+          const appID = $(this).data("appid");
+          ajaxCall(
+            "POST",
+            `${api_base}Game/user/${loggedInUser}/game/${appID}`,
+            "",
+            function (result) {
+              if (result === 1) {
+                alert("Game added successfully!");
+                loadGames(currentApi);
+              } else if (result === 0) {
+                alert("Game already in your list!");
+              }
+            },
+            function () {
+              alert("Failed to add game");
+            }
+          );
+        });
+
+        // סינון לפי מחיר
+        $("#price-filter").on("input", function () {
+          const maxPrice = $(this).val();
+          if (maxPrice === "") {
+            currentApi = `${api_base}game/user/${loggedInUser}/games`;
+          } else {
+            currentApi = `${api_base}game/user/${loggedInUser}/games/${maxPrice}`;
+          }
+          loadGames(currentApi);
+        });
+
+        // סינון לפי דירוג
+        $("#rank-filter").on("input", function () {
+          const maxRank = $(this).val();
+          if (maxRank === "") {
+            currentApi = `${api_base}game/user/${loggedInUser}/games`;
+          } else {
+            currentApi = `${api_base}game/user/${loggedInUser}/games/Rank/${maxRank}`;
+          }
+          loadGames(currentApi);
+        });
       });
 
       // פונקציית התנתקות

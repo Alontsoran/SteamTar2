@@ -61,62 +61,69 @@
     $(document).ready(function () {
       $("#formR").submit(function (e) {
         e.preventDefault();
-        addUser();
+
+        const email = $("#email").val();
+        const password = $("#password").val();
+        const confirmPassword = $("#confirm-password").val();
+        const name = $("#name").val();
+
+        // Form validations
+        if (!email.includes("@") || !email.includes(".")) {
+          Swal.fire("Error", "Please enter a valid email", "error");
+          return;
+        }
+
+        if (password.length < 6) {
+          Swal.fire("Error", "Password must be at least 6 characters", "error");
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          Swal.fire("Error", "Passwords do not match!", "error");
+          return;
+        }
+
+        if (name.length < 2) {
+          Swal.fire("Error", "Name must be at least 2 characters", "error");
+          return;
+        }
+
+        const user = {
+          Email: email,
+          Password: password,
+          Name: name,
+          Id: "0",
+        };
+
+        function onError(err) {
+          console.error(err);
+          Swal.fire("Error", "Registration failed", "error");
+        }
+
+        ajaxCall(
+          "POST",
+          "https://194.90.158.74/igroup6/test2/tar1/api/Users/register",
+          JSON.stringify(user),
+          function () {
+            localStorage.setItem("userEmail", email);
+            localStorage.setItem("userName", name);
+
+            ajaxCall(
+              "GET",
+              `https://194.90.158.74/igroup6/test2/tar1/api/Users/id?email=${email}`,
+              "",
+              function (userId) {
+                localStorage.setItem("userId", userId);
+                Swal.fire("Success", "Account created!", "success").then(
+                  () => (window.location.href = "./mygames.html")
+                );
+              },
+              onError
+            );
+          },
+          onError
+        );
       });
     });
-
-    function addUser() {
-      const email = $("#email").val();
-      const password = $("#password").val();
-      const confirmPassword = $("#confirm-password").val();
-      const name = $("#name").val();
-      const id = "";
-      if (password !== confirmPassword) {
-        Swal.fire("Error", "Passwords do not match!", "error");
-
-        return;
-      }
-
-      const user = {
-        id,
-        name,
-        email,
-        password,
-      };
-      console.log("מה נשלח ", user); // נוסיף לוג לבדיקה
-
-      // קריאה לפונקציית AJAX
-      ajaxCall(
-        "POST",
-        "https://localhost:7262/api/Users/register",
-        JSON.stringify(user),
-        onSuccess, // פונקציית הצלחה
-        onError // פונקציית שגיאה
-      );
-    }
-
-    function onSuccess() {
-      localStorage.setItem("userEmail", $("#email").val());
-      localStorage.setItem("userName", $("#name").val());
-
-      Swal.fire("Success", "Your account has been created!", "success").then(
-        () => {
-          $("#email").val("");
-          $("#password").val("");
-          $("#confirm-password").val("");
-          $("#name").val("");
-
-          window.location.href = "./mygames.html";
-        }
-      );
-    }
-
-    function onError() {
-      Swal.fire(
-        "Error",
-        "User Already exsits. Please Change your email or try again Later.",
-        "error"
-      );
-    }
   </script>
 </html>

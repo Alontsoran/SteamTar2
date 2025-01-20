@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="./ajaxCall.js"></script>
+<head>
+    <title>דף ניהול</title>
+    <!-- קישורים לספריות -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+    
+    <!-- סגנונות פשוטים -->
+    <style>
+        .container {
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">מערכת ניהול משתמשים</h1>
+        <button onclick="logout()">logout</button>
+        <!-- כפתור החלפה בין טבלאות -->
+        <button id="switchButton" class="btn btn-primary">
+            עבור לנתוני משחקים
+        </button>
+
+        <!-- טבלת משתמשים -->
+        <div id="usersTableDiv">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>מזהה</th>
+                        <th>שם משתמש</th>
+                        <th>אימייל</th>
+                        <th>כסף שהוצא</th>
+                        <th>סטטוס</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <!-- טבלת משחקים -->
+        <div id="gamesTableDiv" style="display: none;">
+            <table id="gamesTable">
+                <thead>
+                    <tr>
+                        <th>מזהה משחק</th>
+                        <th>שם</th>
+                        <th>הורדות</th>
+                        <th>הכנסות</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <!-- קישורים לספריות JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
+    <script>
+        // אתחול כשהדף נטען
+        $(document).ready(function() {
+            // הגדרת טבלת משתמשים
+            $('#usersTable').DataTable({
+                ajax: {
+                    url: 'https://194.90.158.74/igroup6/test2/tar1/api/Users/table',
+                    dataSrc: ''
+                },
+                columns: [
+                    { data: 'id' },
+                    { data: 'name' },
+                    { data: 'email' },
+                    { 
+                        data: 'number',
+                        render: function(data) {
+                            return '$' + data.toFixed(2);
+                        }
+                    },
+                    {
+                        data: 'status',
+                        render: function(data, type, row) {
+                            let checked = data === 'פעיל' ? 'checked' : '';
+                            return '<input type="checkbox" ' + checked + 
+                                   ' onchange="שנהסטטוסמשתמש(\'' + row.email + '\', this.checked)">';
+                        }
+                    }
+                ]
+            });
+            
+            // הגדרת טבלת משחקים
+            $('#gamesTable').DataTable({
+                ajax: {
+                    url: 'https://194.90.158.74/igroup6/test2/tar1/api/Game/table',
+                    dataSrc: ''
+                },
+                columns: [
+                    { data: 'appId' },
+                    { data: 'gameName' },
+                    { data: 'actions' },
+                    { 
+                        data: 'total',
+                        render: function(data) {
+                            return '$' + data;
+                        }
+                    }
+                ]
+            });
+
+            // כפתור החלפה בין טבלאות
+            $('#switchButton').click(function() {
+                if ($('#usersTableDiv').is(':visible')) {
+                    $('#usersTableDiv').hide();
+                    $('#gamesTableDiv').show();
+                    $(this).text('עבור לנתוני משתמשים');
+                } else {
+                    $('#gamesTableDiv').hide();
+                    $('#usersTableDiv').show();
+                    $(this).text('עבור לנתוני משחקים');
+                }
+            });
+        });
+
+        // פונקציה לעדכון סטטוס משתמש
+        function שנהסטטוסמשתמש(אימייל, פעיל) {
+            fetch('https://194.90.158.74/igroup6/test2/tar1/api/Users/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: אימייל,
+                    isActive: פעיל
+                })
+            })
+            .then(תשובה => {
+                if (!תשובה.ok) {
+                    throw new Error('העדכון נכשל');
+                }
+                // רענון הטבלה
+                $('#usersTable').DataTable().ajax.reload();
+            })
+            .catch(שגיאה => {
+                alert('שגיאה בעדכון: ' + שגיאה.message);
+            });
+        }
+          // פונקציית התנתקות
+      function logout() {
+        localStorage.clear();
+        window.location.href = "login.html";
+      }
+    </script>
+</body>
+</html>
